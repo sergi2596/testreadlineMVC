@@ -2,3 +2,8 @@
 /Console.class
 /Line.class
 /EditableBufferedReader.class
+/View_Console.class
+/Controller_EditableBufferedReader.class
+/Model_Line.class
+/View_Console$Command.class
+/View_Console$Opcode.class

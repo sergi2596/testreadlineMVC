@@ -11,7 +11,6 @@ public class Controller_EditableBufferedReader extends BufferedReader{
 	View_Console view;
 	
 	int currentcol, currentrow;
-	boolean aux = false,sobreescrivint = false;
 	
 	final int UP_ARROW = 300, DOWN_ARROW = 301, RIGHT_ARROW = 302,
 			LEFT_ARROW = 303, SPACE = 32, CTRLD = 4, CTRLS = 19,
@@ -61,21 +60,17 @@ public class Controller_EditableBufferedReader extends BufferedReader{
 			case 1:
 				model.setCurrentRow(filacols.get(0));
 				if (longitud == 3) {
-					
-					currentcol = filacols.get(2);
+					model.setCurrentColumn(filacols.get(2));
 				} else {
-					currentcol = Integer.parseInt(filacols.get(2) + ""
-							+ filacols.get(3));
+					model.setCurrentColumn(Integer.parseInt(filacols.get(2)+ "" + filacols.get(3)));
 				}
 				break;
 			case 2:
-				currentrow = Integer.parseInt(filacols.get(0) + ""
-						+ filacols.get(1));
+				model.setCurrentRow(Integer.parseInt(filacols.get(0)+ "" + filacols.get(1)));
 				if (longitud == 4) {
-					currentcol = filacols.get(3);
+					model.setCurrentColumn(filacols.get(3));
 				} else if (longitud == 5) {
-					currentcol = Integer.parseInt(filacols.get(3) + ""
-							+ filacols.get(4));
+					model.setCurrentColumn(Integer.parseInt(filacols.get(3)+ "" + filacols.get(4)));
 				}
 				break;
 			default:
@@ -113,191 +108,74 @@ public class Controller_EditableBufferedReader extends BufferedReader{
 			currentrow = model.getRow();
 			currentcol = model.getColumn();
 			cr = read();
+			
 			if (32 < cr && cr < 255 && cr != 127) {
 				
-				model.AddColumn(1); 
-				str = Character.toString((char) cr);
-				System.out.print(str);
+				model.setChar(cr);
+				model.currentchar();
+				
 			} else if (cr == CTRLS) {
-				if (aux) {
-					String[] cmd = { "bash", "-c", "tput rmul > /dev/tty" };
-					executarComanda(cmd);
-					aux = false;
-				} else {
-					String[] cmd = { "bash", "-c", "tput smul > /dev/tty" };
-					executarComanda(cmd);
-					aux = true;
-				}
-			}
+				
+				model.ctrls();
+				
+			}else if (cr == SPACE) {
+				
+				model.space();
+				
+			}else if (cr == UP_ARROW) {
+				
+				model.up_arrow();
 
-			else if (cr == SPACE) {
-				model.AddColumn(1);
-				System.out.print(String.format("%c[%d%s", escCode, 1, "@"));
-				System.out.print(String.format("%c[%d%s", escCode, 1, "C"));
-
-			}
-
-			/**
-			 * Per la UP_ARROW, primer mirem que la fila actual no sigui la
-			 * primera. En tal cas, si estem a una columna més gran que el
-			 * numero màxim de columnes de la fila de dalt, enviem el cursor a
-			 * la columna màxima de la fila de dalt (així evitem que es pugui
-			 * fer "trampa" i enviar el cursor a una columna de la fila de dalt
-			 * que encara no existeix. Ho fem en dos passos, primer movem cursor
-			 * a dalt i despres a la dreta (hi ha una comanda per fer-ho de cop
-			 * però no m'ha funcionat bé).
-			 */
-
-			else if (cr == UP_ARROW && model.getMap().containsKey(currentrow-1)) {
-				if (currentrow > firstrow) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
-					if (currentcol > model.getMaxColumn((currentrow - 1))) {
-						System.out.print(String.format("%c[%d%s", escCode,
-								model.getMaxColumn(currentrow - 1), "G"));
-					}
-				}
-
-				/**
-				 * Igual que UP_ARROW però mirant que no ens passem de la fila
-				 * màxima
-				 */
-
-			} else if (cr == DOWN_ARROW && model.getMap().containsKey(currentrow+1)) {
-				if (currentrow < model.getLastRow()) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "B"));
-					if (currentcol > model.getMaxColumn((currentrow + 1))) {
-						System.out.print(String.format("%c[%d%s", escCode,
-								model.getMaxColumn(currentrow + 1), "G"));
-					}
-				}
-
-				/**
-				 * Si no estem a la columna maxima de la fila, movem cursor a la
-				 * dreta i punto. Si estem a la ultima columna (però NO a la
-				 * ultima fila), movem cursor a la fila següent, columna 1
-				 */
+			} else if (cr == DOWN_ARROW) {
+				
+				model.down_arrow();
 
 			} else if (cr == RIGHT_ARROW) {
-				if (currentcol <= model.getMaxColumn(currentrow) && model.getMaxColumn(currentrow) > 0) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "C"));
-				} else if (currentrow != model.getLastRow() && model.getMap().containsKey(currentrow+1)) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "E"));
-				}
-
-				/**
-				 * Igual que abans, però per canviar de fila ho fem en dos
-				 * passos (també es pot fer en un però no funcionava). Primer
-				 * movem cursor a la fila de dalt i despres el movem a la dreta
-				 * fins la columna màxima.
-				 */
-
+				
+				model.right_arrow();
+				
 			} else if (cr == LEFT_ARROW) {
-				if (currentcol > 1) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "D"));
-				} else if (currentrow > firstrow && model.getMap().containsKey(currentrow-1)) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
-					if (model.getMaxColumn(currentrow-1) > 0) {
-						System.out.print(String.format("%c[%d%s", escCode, model.getMaxColumn(model.getRow()-1), "C"));
-					}
-				}
-
-				/**
-				 * Si estem borrant la primera lletra d'una fila (que no sigui
-				 * la primera fila), movem cursor a la fila de dalt fins la
-				 * ultima columna i borrem el caracter que quedava. També
-				 * decrementem el numero de columnes de la fila (en cas que no
-				 * en quedin, el metode DownCol() s'encarrega d'eliminar la fila
-				 * del TreeMap)
-				 */
+				
+				model.left_arrow();
 
 			} else if (cr == DELETE) {
 				
-
-				if (currentcol == 1 && currentrow > firstrow) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
-					System.out.print(String.format("%c[%d%s", escCode, model.getMaxColumn(currentrow-1)+1, "G"));
-					if (model.getMaxColumn(currentrow) == 0 && currentrow == model.getLastRow()) {
-						model.DownColumn();
-					}
-				}
-				else {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "D"));
-					System.out.print(String.format("%c[%d%s", escCode, 1, "P"));
-					model.DownColumn();
-				}		
-
-				/**
-				 * Borra caràcters de la dreta i els va movent. Decrementa número
-				 * de columnes només si borra un caràcter
-				 */
+				model.delete();	
 
 			} else if (cr == SUPRIMIR) {
-				System.out.print(String.format("%c[%d%s", escCode, 1, "P"));
-				if (model.getMaxColumn(currentrow) > 0 && currentcol <= model.getMaxColumn(currentrow)) {
-					model.DownColumn();
-				}
 				
-				/**
-				 * HOME i END són iguals que sempre, molt bàsic 
-				 */
+				model.suprimir();
 				
 			} else if (cr == HOME) {
-				System.out.print(String.format("%c[%d%s", escCode, 1, "G"));
+				model.home();
 				
 			} else if (cr == END) {
-				System.out.print(String.format("%c[%d%s", escCode,
-						model.getMaxColumn(currentrow) + 1, "G"));
+				model.end();
 
-				/**
-				 * ENTER només funciona si en fem un i escrivim algo. Si fem dos
-				 * ENTERS (deixant una fila en blanc) NO està implementat
-				 */
 			} else if (cr == ENTER) {
-				System.out.print(String.format("%c[%d%s", escCode, 1, "E"));
-				rowcol.filacol();
-				if (!model.getMap().containsKey(model.getRow())) {
-					model.AddColumn(1);
-				}
+				
+				model.enter();
 				
 			} else if (cr == INSERT) {
-				if (sobreescrivint) {
-					System.out.print(String.format("%c[%d%s", escCode, 4, "h")); // insert
-					sobreescrivint = false;
-				}else {
-					System.out.print(String.format("%c[%d%s", escCode, 4, "l")); // sobrescriure
-																				//amb la l es veu que es resetegen parametres
-					sobreescrivint = true;
-				}
 				
-			}
-			else if (cr == FIRSTROW) {
-				System.out.print(String.format("%c[%d%s", escCode, model.getFirstRow(), "H"));
-			}
-			
-			else if (cr == LASTROW) {
-				System.out.print(String.format("%c[%d%s", escCode, model.getLastRow(), "H"));				
-				System.out.print(String.format("%c[%d%s", escCode, model.getMaxColumn(model.getLastRow())+1, "G"));
-			}
-			
-			else if (cr == TAB) {
-				System.out.print(String.format("%c[%d%s", escCode, 4, "@"));
-				System.out.print(String.format("%c[%d%s", escCode, 4, "C"));
-				model.AddColumn(4);			
-			}
-			
-			else if (cr == DELROW) {
+				model.sobreescrivint();
 				
-				System.out.print(String.format("%c[%d%s", escCode, 2, "K"));
-				if (currentrow == model.getLastRow() && currentrow != model.getFirstRow()) {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
-					System.out.print(String.format("%c[%d%s", escCode, model.getMaxColumn(currentrow-1)+1, "G"));
-					model.removeRow();
-				}
+			}else if (cr == FIRSTROW) {
 				
-				else {
-					System.out.print(String.format("%c[%d%s", escCode, 1, "G"));
-					model.setRowtoZero();
-				}			
+				model.firstrow();
+				
+			}else if (cr == LASTROW) {
+				
+				model.lastrow();
+				
+			}else if (cr == TAB) {
+				
+				model.tab();		
+				
+			}else if (cr == DELROW) {
+				
+				model.delrow();
+				
 			}
 
 		}

@@ -1,19 +1,27 @@
+import java.io.IOException;
 import java.util.*;
 
 public class View_Console implements Observer{
 	Model_Line model;
+	char escCode = 0x1B;
 	
 	View_Console(Model_Line model){
 		this.model = model;
 	}
 	static enum Opcode {
 				UP_ARROW, DOWN_ARROW, RIGHT_ARROW,
-				LEFT_ARROW, SPACE, CTRLD, CTRLS,
-				SUPRIMIR, DELETE, HOME,
-				END, ENTER, INSERT,
-				TAB, DELROW, GOTOXY, SOBREESCIURE
+				LEFT_ARROW,UP_ARROWL, DOWN_ARROWL, RIGHT_ARROWD,
+				LEFT_ARROWU, SPACE, CTRLD, CTRLS, CTRLSOFF,
+				SUPRIMIR, DELETE, HOME,FIRSTROW,LASTROW,
+				END, ENTER, INSERT, CHAR,
+				TAB, DELROW, SOBREESCRIURE
 		}
 
+	
+	//no va aqui pero per enrecordarme: per pillar maxcols,en terminal 'export COLUMNS' luego en
+	//una funcion hacer Integer.parseInt(getenv("COLUMNS"))
+	
+	
 	static class Command {
 	  Opcode op;
 	  
@@ -21,66 +29,171 @@ public class View_Console implements Observer{
 	    this.op = op;
 	  }
 	}
+	/**
+	 * EL PROFE A CLASSE HA DIT QUE FEM METODES PER CADA ACCIÓ I QUE AL UPDATE NOMES ELS CRIDEM
+	 */
+	public void writechar() {
+		System.out.print(Character.toString((char) model.getChar()));
+	}
+	public void up_arrow() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "A"));	
+	}
+	public void up_arrowL() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
+		System.out.print(String.format("%c[%d%s", escCode, model.getMaxColumn(model.getRow() - 1), "G"));
+	}
+	public void down_arrow() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "B"));
+	}
+	public void down_arrowL() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "B"));
+		System.out.print(String.format("%c[%d%s", escCode,model.getMaxColumn(model.getRow() + 1), "G"));
+	}
+	
+	public void right_arrow() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "C"));
+	}
+	public void right_arrowD() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "C"));
+		System.out.print(String.format("%c[%d%s", escCode, 1, "E"));
+	}
+	public void left_arrow() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "D"));
+	}
+	public void left_arrowU() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
+		System.out.print(String.format("%c[%d%s", escCode, model.getMaxColumn(model.getRow()-1), "C"));
+	}
+	public void first_row() {
+		System.out.print(String.format("%c[%d%s", escCode, model.getFirstRow(), "H"));
+	}
+	public void last_row() {
+		System.out.print(String.format("%c[%d%s", escCode, model.getLastRow(), "H"));				
+		System.out.print(String.format("%c[%d%s", escCode, model.getMaxColumn(model.getLastRow())+1, "G"));
+	}
+	public void space() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "@"));
+		System.out.print(String.format("%c[%d%s", escCode, 1, "C"));
+	}
+	public void ctrls() {
+		String[] cmd = { "bash", "-c", "tput rmul > /dev/tty" };
+		execute(cmd);
+	}
+	public void ctrlsoff() {
+		String[] cmd = { "bash", "-c", "tput smul > /dev/tty" };
+		execute(cmd);
+	}
+	public void suprimir() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "P"));
+	}
+	public void delete() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "D"));
+		System.out.print(String.format("%c[%d%s", escCode, 1, "P"));
+	}
+	public void home() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "G"));
+	}
+	public void end() {
+		System.out.print(String.format("%c[%d%s", escCode,model.getMaxColumn(model.getRow()) + 1, "G"));
+	}
+	public void enter() {
+		System.out.print(String.format("%c[%d%s", escCode, 1, "E"));
+	}
+	public void insert() {
+		System.out.print(String.format("%c[%d%s", escCode, 4, "h"));
+	}
+	public void sobreesciure() {
+		System.out.print(String.format("%c[%d%s", escCode, 4, "l"));
+	}
+	public void tab() {
+		System.out.print(String.format("%c[%d%s", escCode, 4, "@"));
+		System.out.print(String.format("%c[%d%s", escCode, 4, "C"));
+	}
+	public void delrow() {
+		System.out.print(String.format("%c[%d%s", escCode, 2, "K"));
+	}
+	public void execute(String[] cmd) {
+		try {
+			Runtime.getRuntime().exec(cmd);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	
 	public void update(Observable o, Object arg) {
 		Command comm = (Command) arg;
-		char escCode = 0x1B;
+
 		
 		switch(comm.op) {
+			case CHAR:
+				writechar();
+				break;
 			case UP_ARROW:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
+				up_arrow();
+				break;
+			case UP_ARROWL:
+				up_arrowL();
 				break;
 			case DOWN_ARROW:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "B"));
+				down_arrow();
+				break;
+			case DOWN_ARROWL:
+				down_arrowL();
 				break;
 			case RIGHT_ARROW:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "C"));
+				right_arrow();
+				break;
+			case RIGHT_ARROWD:
+				right_arrowD();
 				break;
 			case LEFT_ARROW:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "D"));
+				left_arrow();
+				break;
+			case LEFT_ARROWU:
+				left_arrowU();
+				break;
+			case FIRSTROW:
+				first_row();
+				break;
+			case LASTROW:
+				last_row();
 				break;
 			case SPACE:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "@"));
-				System.out.print(String.format("%c[%d%s", escCode, 1, "C"));
+				space();
 				break;
-			/*case CTRLD:
-				
-				break;*/
 			case CTRLS:
-				
+				ctrls();
+				break;
+			case CTRLSOFF:
+				ctrlsoff();
 				break;
 			case SUPRIMIR:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "P"));
+				suprimir();
 				break;
 			case DELETE:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "D"));
-				System.out.print(String.format("%c[%d%s", escCode, 1, "P"));
+				delete();
 				break;
 			case HOME:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "G"));
+				home();
 				break;
 			case END:
-				System.out.print(String.format("%c[%d%s", escCode,model.getMaxColumn(currentrow) + 1, "G"));
+				end();
 				break;
 			case ENTER:
-				System.out.print(String.format("%c[%d%s", escCode, 1, "E"));
+				enter();
 				break;
 			case INSERT:
-				System.out.print(String.format("%c[%d%s", escCode, 4, "h"));
+				insert();
 				break;
-			case SOBREESCIURE:
-				System.out.print(String.format("%c[%d%s", escCode, 4, "l"));
+			case SOBREESCRIURE:
+				sobreesciure();
 				break;
 			case TAB:
-				System.out.print(String.format("%c[%d%s", escCode, 4, "@"));
-				System.out.print(String.format("%c[%d%s", escCode, 4, "C"));
+				tab();
 				break;
 			case DELROW:
-				System.out.print(String.format("%c[%d%s", escCode, 2, "K"));
-				break;
-			case GOTOXY:
-				
+				delrow();
 				break;
 			default:
 				break;

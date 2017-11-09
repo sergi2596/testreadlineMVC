@@ -17,18 +17,12 @@ public class Controller_EditableBufferedReader extends BufferedReader{
 			SUPRIMIR = 295, ESC = 27, CORXET = 91, DELETE = 127, HOME = 305,
 			END = 304, ENTER = 13, INSERT = 294, FIRSTROW = 6, LASTROW = 12, 
 			TAB = 9, DELROW = 8, PUNTICOMA = 11;
-	public Controller_EditableBufferedReader(Reader in) {
+	public Controller_EditableBufferedReader(Reader in, Model_Line model, View_Console view) {
 		super(in);
-	}
-	
-	
-	//AFEGIM MODEL I VIEW PER CONTROLAR-LOS
-	public void addModel(Model_Line model) {
 		this.model = model;
-	}
-	public void addView(View_Console view) {
 		this.view = view;
 	}
+	
 	
 	
 	public void filacol() {

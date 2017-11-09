@@ -97,12 +97,13 @@ public class Model_Line extends Observable{
 
 	public void AddColumn(int ncols) {
 		int maxcol = -1;
+		int maxcol1=-1;
 		if (map.containsKey(currentrow)) {
 			maxcol = getMaxColumn(currentrow);
 		}
 		if (enter) {
 			setCurrentRow(currentrow +1);
-			map.put(currentrow, ncols);
+			map.put(currentrow,maxcol1+ ncols);
 			enter = false;
 		}else {
 			map.put(currentrow, maxcol + ncols);
@@ -271,7 +272,12 @@ public class Model_Line extends Observable{
 		if (currentcol > 1) {
 			notifyObservers(new View_Console.Command(View_Console.Opcode.LEFT_ARROW));
 		} else if (currentrow > getFirstRow() && getMap().containsKey(currentrow-1)) {
-			notifyObservers(new View_Console.Command(View_Console.Opcode.LEFT_ARROWU));
+			if(getMaxColumn(currentrow -1) > 0 ) {
+				notifyObservers(new View_Console.Command(View_Console.Opcode.LEFT_ARROWU));
+			}else {
+				notifyObservers(new View_Console.Command(View_Console.Opcode.UP_ARROW));
+			}
+			
 		}
 	}
 	
@@ -358,14 +364,13 @@ public class Model_Line extends Observable{
 	
 	public void delrow() {
 		setChanged();
-		notifyObservers(new View_Console.Command(View_Console.Opcode.DELROW));
 		if (currentrow == getLastRow() && currentrow != getFirstRow()) {
-			notifyObservers(new View_Console.Command(View_Console.Opcode.UP_ARROWL));
 			removeRow();
 		}
-		
-		else {
-			notifyObservers(new View_Console.Command(View_Console.Opcode.HOME));
+		if (currentrow != getFirstRow()) {
+			notifyObservers(new View_Console.Command(View_Console.Opcode.DELROWUP));
+		}else {
+			notifyObservers(new View_Console.Command(View_Console.Opcode.DELROW));
 			setRowtoZero();
 		}
 	}

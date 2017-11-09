@@ -13,7 +13,7 @@ public class View_Console implements Observer{
 				LEFT_ARROW,UP_ARROWL, DOWN_ARROWL, RIGHT_ARROWD,
 				LEFT_ARROWU, SPACE, CTRLD, CTRLS, CTRLSOFF,
 				SUPRIMIR, DELETE, HOME,FIRSTROW,LASTROW,
-				END, ENTER, INSERT, CHAR,
+				END, ENTER, INSERT, CHAR, DELROWUP,
 				TAB, DELROW, SOBREESCRIURE
 		}
 
@@ -111,6 +111,13 @@ public class View_Console implements Observer{
 	}
 	public void delrow() {
 		System.out.print(String.format("%c[%d%s", escCode, 2, "K"));
+		System.out.print(String.format("%c[%d%s", escCode, 1, "G"));
+	}
+	public void delrowup() {
+		System.out.print(String.format("%c[%d%s", escCode, 2, "K"));
+		System.out.print(String.format("%c[%d%s", escCode, 1, "A"));
+		System.out.print(String.format("%c[%d%s", escCode,model.getMaxColumn(model.getRow()) + 1, "G"));
+		
 	}
 	public void execute(String[] cmd) {
 		try {
@@ -194,6 +201,9 @@ public class View_Console implements Observer{
 				break;
 			case DELROW:
 				delrow();
+				break;
+			case DELROWUP:
+				delrowup();
 				break;
 			default:
 				break;

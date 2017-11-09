@@ -11,12 +11,11 @@ public class testreadlineMVC {
 	public static void main(String[] args) {
 		
 		Model_Line model = new Model_Line();
-		Controller_EditableBufferedReader controller = new Controller_EditableBufferedReader(new InputStreamReader(System.in));
+		
 		View_Console view = new View_Console(model);
+		Controller_EditableBufferedReader controller = new Controller_EditableBufferedReader(new InputStreamReader(System.in), model,view);
 		model.addObserver(view);
 		
-		controller.addModel(model);
-		controller.addView(view);
 		
 		controller.setRaw();
         String str= null;

@@ -219,12 +219,12 @@ public class Model_Line extends Observable{
 	public void up_arrow() {
 		setChanged();
 		if (getMap().containsKey(currentrow-1)) {
-			if (currentrow > getFirstRow()) {
+			if (currentcol > getMaxColumn((currentrow - 1))) {
+				notifyObservers(new View_Console.Command(View_Console.Opcode.UP_ARROWL));
+			}else {
 				notifyObservers(new View_Console.Command(View_Console.Opcode.UP_ARROW));
-				if (currentcol > getMaxColumn((currentrow - 1))) {
-					notifyObservers(new View_Console.Command(View_Console.Opcode.UP_ARROWL));
-				}
 			}
+			
 		}
 	}
 	

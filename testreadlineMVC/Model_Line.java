@@ -102,7 +102,7 @@ public class Model_Line extends Observable{
 		}
 		if (enter) {
 			setCurrentRow(currentrow +1);
-			map.put(currentrow, maxcol + ncols);
+			map.put(currentrow, ncols);
 			enter = false;
 		}else {
 			map.put(currentrow, maxcol + ncols);
@@ -235,12 +235,13 @@ public class Model_Line extends Observable{
 	public void down_arrow() {
 		setChanged();
 		if (getMap().containsKey(currentrow+1)) {
-			if (currentrow < getLastRow()) {
+			if (currentcol > getMaxColumn((currentrow + 1))) {
+				notifyObservers(new View_Console.Command(View_Console.Opcode.DOWN_ARROWL));
+				
+			}else {
 				notifyObservers(new View_Console.Command(View_Console.Opcode.DOWN_ARROW));
-				if (currentcol > getMaxColumn((currentrow + 1))) {
-					notifyObservers(new View_Console.Command(View_Console.Opcode.DOWN_ARROWL));
-				}
 			}
+
 		}
 		
 	}
